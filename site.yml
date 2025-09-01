@@ -1,0 +1,10 @@
+---
+- name: Provisionar servidor InnovaSys (Apache + Samba)
+  hosts: innovasys
+  become: true
+  vars:
+    nombre_empresa: "InnovaSys"
+
+  roles:
+    - role: apache
+    - role: samba

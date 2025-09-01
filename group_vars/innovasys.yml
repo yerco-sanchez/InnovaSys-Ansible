@@ -1,0 +1,14 @@
+# Web / Intranet
+nombre_empresa: "InnovaSys"
+
+# Samba / Archivo compartido
+samba_share_name: "Proyectos"
+samba_share_path: "/srv/samba/proyectos"
+samba_group: "operadores"
+samba_user: "operador1"
+samba_password: "Innova.2025"
+samba_valid_users: "@operadores"
+samba_writable: "yes"
+samba_browseable: "yes"
+samba_create_mask: "0660"
+samba_directory_mask: "2770"

@@ -1,0 +1,58 @@
+---
+- name: Instalar paquetes de Samba
+  ansible.builtin.apt:
+    name: "{{ samba_packages }}"
+    state: present
+    update_cache: true
+
+- name: Crear grupo del sistema para Samba
+  ansible.builtin.group:
+    name: "{{ samba_group }}"
+    state: present
+
+- name: Crear usuario del sistema sin shell
+  ansible.builtin.user:
+    name: "{{ samba_user }}"
+    shell: /usr/sbin/nologin
+    create_home: false
+    groups: "{{ samba_group }}"
+    append: true
+    state: present
+
+- name: Crear directorio compartido de proyectos
+  ansible.builtin.file:
+    path: "{{ samba_share_path }}"
+    state: directory
+    owner: root
+    group: "{{ samba_group }}"
+    mode: "2770"
+
+- name: Desplegar plantilla smb.conf
+  ansible.builtin.template:
+    src: smb.conf.j2
+    dest: "{{ samba_config_file }}"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reiniciar smbd
+
+- name: Verificar si el usuario Samba ya existe
+  ansible.builtin.command: "pdbedit -L -u {{ samba_user }}"
+  register: samba_user_check
+  failed_when: false
+  changed_when: false
+
+- name: Crear usuario Samba si no existe
+  ansible.builtin.shell: |
+    printf "%s\n%s\n" "{{ samba_password }}" "{{ samba_password }}" | smbpasswd -s -a "{{ samba_user }}"
+  args:
+    executable: /bin/bash
+  when: samba_user_check.rc != 0
+  notify: Reiniciar smbd
+
+- name: Asegurar que los servicios de Samba estén habilitados y en ejecución
+  ansible.builtin.service:
+    name: "{{ item }}"
+    state: started
+    enabled: true
+  loop: "{{ samba_services }}"
